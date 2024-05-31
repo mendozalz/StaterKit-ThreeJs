@@ -48,8 +48,33 @@ export const initScene = (mountRef) => {
   currentRef.appendChild(renderer.domElement);
 };
 
-//Dismount and clena up the buffer from the scene
+// Dismount and clean up the buffer from the scene
 export const cleanUpScene = () => {
-  scene.dispose();
-  currentRef.removeChild(renderer.domElement);
+  gui.destroy();
+  // Recorrer todos los objetos dentro del scene y limpiar recursos
+  scene.traverse((object) => {
+    if (object.isMesh) {
+      // Eliminar la geometría
+      if (object.geometry) {
+        object.geometry.dispose();
+      }
+      // Eliminar el material
+      if (object.material) {
+        // Materiales pueden ser un array (en caso de materiales multi-material)
+        if (Array.isArray(object.material)) {
+          object.material.forEach((material) => material.dispose());
+        } else {
+          object.material.dispose();
+        }
+      }
+    }
+  });
+
+  // Limpiar texturas del renderer
+  renderer.dispose();
+
+  // Eliminar el canvas del DOM
+  if (currentRef) {
+    currentRef.removeChild(renderer.domElement);
+  }
 };
