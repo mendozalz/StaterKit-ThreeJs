@@ -1,32 +1,36 @@
 import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
 
-//Global variables
+// Global variables
 let currentRef = null;
 
-//Scene, camera, renderer
+// Scene, camera, renderer
 const scene = new THREE.Scene();
-const camera = new THREE.PerspectiveCamera(25, 100 / 100, 0.1, 100);
+const camera = new THREE.PerspectiveCamera(25, window.innerWidth / window.innerHeight, 0.1, 100);
 scene.add(camera);
 camera.position.set(5, 5, 5);
-camera.lookAt(new THREE.Vector3());
+camera.lookAt(new THREE.Vector3(0, 0, 0));
 
-const renderer = new THREE.WebGLRenderer();
-renderer.setSize(100, 100);
+const renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.setPixelRatio(window.devicePixelRatio);
 
-//OrbitControls
+// OrbitControls
 const orbitControls = new OrbitControls(camera, renderer.domElement);
 orbitControls.enableDamping = true;
+orbitControls.dampingFactor = 0.25;
 
-//Resize canvas
+// Resize canvas
 const resize = () => {
-  renderer.setSize(currentRef.clientWidth, currentRef.clientHeight);
-  camera.aspect = currentRef.clientWidth / currentRef.clientHeight;
-  camera.updateProjectionMatrix();
+  if (currentRef) {
+    renderer.setSize(currentRef.clientWidth, currentRef.clientHeight);
+    camera.aspect = currentRef.clientWidth / currentRef.clientHeight;
+    camera.updateProjectionMatrix();
+  }
 };
 window.addEventListener("resize", resize);
 
-//Animate the scene
+// Animate the scene
 const animate = () => {
   orbitControls.update();
   renderer.render(scene, camera);
@@ -34,14 +38,14 @@ const animate = () => {
 };
 animate();
 
-//cube
+// Cube
 const cube = new THREE.Mesh(
   new THREE.BoxGeometry(1, 1, 1),
-  new THREE.MeshBasicMaterial()
+  new THREE.MeshBasicMaterial({ color: 0x00ff00 })
 );
 scene.add(cube);
 
-//Init and mount the scene
+// Init and mount the scene
 export const initScene = (mountRef) => {
   currentRef = mountRef.current;
   resize();
