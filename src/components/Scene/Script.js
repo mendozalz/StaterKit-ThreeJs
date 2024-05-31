@@ -50,7 +50,6 @@ export const initScene = (mountRef) => {
 
 // Dismount and clean up the buffer from the scene
 export const cleanUpScene = () => {
-  gui.destroy();
   // Recorrer todos los objetos dentro del scene y limpiar recursos
   scene.traverse((object) => {
     if (object.isMesh) {
