@@ -1,19 +1,57 @@
 import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
+import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
+import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
+import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
+import { GlitchPass } from 'three/addons/postprocessing/GlitchPass.js';
+import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
+import * as dat from "dat.gui"
 
 // Global variables
 let currentRef = null;
-
+//const gui = new dat.GUI({with:400});
 // Scene, camera, renderer
 const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera(25, window.innerWidth / window.innerHeight, 0.1, 100);
 scene.add(camera);
-camera.position.set(5, 5, 5);
+camera.position.set(27, 27, 27);
 camera.lookAt(new THREE.Vector3(0, 0, 0));
 
 const renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.outputEncoding = THREE.SRGBColorSpace;
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.3;
 renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.setPixelRatio(window.devicePixelRatio);
+
+// Agregando los efecto de post-procesamiento
+
+const effectComposer = new EffectComposer(renderer);
+const renderPass = new RenderPass(scene, camera);
+effectComposer.addPass(renderPass);
+
+// Pass 
+const glitchPass = new GlitchPass();
+glitchPass.enabled = true;
+effectComposer.addPass(glitchPass);
+
+// BloomPass
+const bloomPass = new UnrealBloomPass( new THREE.Vector2( window.innerWidth, window.innerHeight ), 1.5, 0.4, 0.85 );
+effectComposer.addPass(bloomPass);
+
+// dat.gui 
+/* const params = {
+  threshold: 0,
+  strength: 1,
+  radius: 0,
+  exposure: 1.2
+}; */
+
+/* gui.add(params, 'exposure', 0.1, 5 ).onChange( function ( value ) {
+
+  renderer.toneMappingExposure = Math.pow( value, 4.0 );
+
+} ); */
 
 // OrbitControls
 const orbitControls = new OrbitControls(camera, renderer.domElement);
@@ -33,17 +71,26 @@ window.addEventListener("resize", resize);
 // Animate the scene
 const animate = () => {
   orbitControls.update();
-  renderer.render(scene, camera);
+ // renderer.render(scene, camera);
+ effectComposer.render();
   requestAnimationFrame(animate);
 };
 animate();
 
-// Cube
-const cube = new THREE.Mesh(
-  new THREE.BoxGeometry(1, 1, 1),
-  new THREE.MeshBasicMaterial({ color: 0x00ff00 })
-);
-scene.add(cube);
+// Cargando GLTF
+const gltfLoader = new GLTFLoader()
+gltfLoader.load("./House.glb", (gltf) => {
+  scene.add(gltf.scene)
+})
+
+// Luces
+const directionalLight = new THREE.DirectionalLight(0xffffff, 1.2);
+directionalLight.position.set(10, 10, 10);
+scene.add(directionalLight);
+
+// Luz Ambiental
+const luzAmbiental = new THREE.AmbientLight(0xffffff, 0.8)
+scene.add(luzAmbiental);
 
 // Init and mount the scene
 export const initScene = (mountRef) => {
